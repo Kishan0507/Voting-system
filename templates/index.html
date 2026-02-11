@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row min-vh-100 align-items-center justify-content-center text-center">
+    <div class="col-lg-8">
+        <h1 class="display-3 fw-bold mb-4 text-primary">Secure School Voting System</h1>
+        <p class="lead mb-5">Digital democracy for the next generation. Secure, fast, and transparent.</p>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="card h-100 p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                        <h3 class="h5 mb-3">Principal</h3>
+                        <p class="text-muted small">Manage elections, teachers, and results.</p>
+                        <a href="{% url 'principal_login' %}" class="btn btn-primary w-100 stretched-link">Login</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-success mb-3"></i>
+                        <h3 class="h5 mb-3">Teacher</h3>
+                        <p class="text-muted small">Manage students and nominate candidates.</p>
+                        <a href="{% url 'teacher_login' %}" class="btn btn-success w-100 stretched-link">Login</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-user-graduate fa-3x text-info mb-3"></i>
+                        <h3 class="h5 mb-3">Student</h3>
+                        <p class="text-muted small">Cast your vote securely.</p>
+                        <a href="{% url 'student_login' %}"
+                            class="btn btn-info w-100 stretched-link text-white">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

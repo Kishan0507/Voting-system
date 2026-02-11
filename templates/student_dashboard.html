@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="text-primary fw-bold">Student Dashboard</h2>
+        <p class="text-muted">Welcome, {{ student.user.get_full_name }} (Class {{ student.class_name }}-{{
+            student.section }})</p>
+    </div>
+
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <i class="fas fa-info-circle me-2"></i> You can vote for one candidate per position. Once you cast your vote, it
+        cannot be changed.
+    </div>
+
+    <h4 class="mb-3">Open Positions</h4>
+    <div class="row g-4">
+        {% for position in positions %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 {% if position.id in voted_positions %}border-success{% endif %}">
+                <div class="card-body text-center">
+                    <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title fw-bold">{{ position.name }}</h5>
+
+                    {% if position.id in voted_positions %}
+                    <button class="btn btn-success w-100 mt-3" disabled>
+                        <i class="fas fa-check-circle me-1"></i> Voted
+                    </button>
+                    {% else %}
+                    <a href="{% url 'vote_page' position.id %}" class="btn btn-primary w-100 mt-3">
+                        Vote Now <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                No positions available for voting at this time.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

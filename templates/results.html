@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary">Election Results</h2>
+        <a href="{% url 'principal_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for result in results_data %}
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">{{ result.position.name }}</h5>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- Chart -->
+                    <div class="mb-4" style="height:250px;">
+                        <canvas id="chart-{{ result.position.id }}"></canvas>
+                    </div>
+
+                    <!-- Candidate List -->
+                    <div class="list-group list-group-flush">
+                        {% for candidate in result.candidates %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center
+                            {% if forloop.first and candidate.total_votes > 0 %}
+                                bg-light border-start border-success border-4
+                            {% endif %}">
+
+                            <div class="d-flex align-items-center">
+
+                                {% if forloop.first and candidate.total_votes > 0 %}
+                                    <i class="fas fa-crown text-warning me-2" title="Winner"></i>
+                                {% else %}
+                                    <span class="badge bg-secondary rounded-pill me-2">
+                                        {{ forloop.counter }}
+                                    </span>
+                                {% endif %}
+
+                                <div>
+                                    <h6 class="mb-0 fw-bold">
+                                        {{ candidate.student.name }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ candidate.student.class_name }} - {{ candidate.student.section }}
+                                    </small>
+                                </div>
+                            </div>
+
+                            <span class="badge bg-primary rounded-pill">
+                                {{ candidate.total_votes }} votes
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-3">
+                            No candidates available.
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                No results available.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Chart Script (Outside Loop) -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    {% for result in results_data %}
+        const ctx{{ result.position.id }} = document
+            .getElementById('chart-{{ result.position.id }}')
+            .getContext('2d');
+
+        new Chart(ctx{{ result.position.id }}, {
+            type: 'bar',
+            data: {
+                labels: {{ result.chart_labels|safe }},
+                datasets: [{
+                    label: 'Votes',
+                    data: {{ result.chart_data|safe }},
+                    backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    {% endfor %}
+
+});
+</script>
+
+{% endblock %}

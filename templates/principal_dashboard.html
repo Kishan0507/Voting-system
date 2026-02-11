@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">Principal Dashboard</h2>
+        <div>
+            <a href="{% url 'add_teacher' %}" class="btn btn-outline-primary me-2"><i class="fas fa-user-plus"></i> Add
+                Teacher</a>
+            <a href="{% url 'election_settings' %}" class="btn btn-outline-secondary"><i class="fas fa-cog"></i>
+                Election Settings</a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Teachers</h5>
+                    <p class="h2 fw-bold mb-0">{{ teachers.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Students</h5>
+                    <p class="h2 fw-bold mb-0">{{ students_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Candidates</h5>
+                    <p class="h2 fw-bold mb-0">{{ candidates_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Votes Cast</h5>
+                    <p class="h2 fw-bold mb-0">{{ votes_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Election Management -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Election Satus</h5>
+                    {% if election_settings.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p><strong>Start Time:</strong> {{ election_settings.start_time|default:"Not Set" }}</p>
+                    <p><strong>End Time:</strong> {{ election_settings.end_time|default:"Not Set" }}</p>
+                    <hr>
+                    <div class="d-grid gap-2 d-md-block">
+                        <a href="{% url 'add_position' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add
+                            Position</a>
+                        <a href="{% url 'create_broadcast' %}" class="btn btn-info text-white"><i
+                                class="fas fa-bullhorn"></i> Post Broadcast</a>
+                        <a href="{% url 'results' %}" class="btn btn-dark"><i class="fas fa-chart-bar"></i> View
+                            Results</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Broadcasts -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recent Broadcasts</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 300px;">
+                    {% for broadcast in broadcasts %}
+                    <div class="mb-3 border-bottom pb-2">
+                        <h6 class="fw-bold">{{ broadcast.title }}</h6>
+                        <p class="small text-muted mb-1">{{ broadcast.created_at|date:"M d, H:i" }}</p>
+                        <p class="small mb-1">{{ broadcast.message|truncatechars:50 }}</p>
+                        {% if broadcast.attachment %}
+                        <a href="{{ broadcast.attachment.url }}" class="small text-primary" target="_blank"><i
+                                class="fas fa-paperclip"></i> Attachment</a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No broadcasts yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
