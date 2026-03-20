@@ -28,7 +28,7 @@ A modern, highly secure, and visually stunning web application built with Django
 ### 1. Installation
 Clone the repository and install the required dependencies:
 ```bash
-git clone https://github.com/yourusername/school-voting-system.git
+git clone https://github.com/Kishan0507/school-voting-system.git
 cd school-voting-system
 pip install -r requirements.txt
 ```
