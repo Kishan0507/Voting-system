@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row min-vh-100 align-items-center justify-content-center py-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card border-0 rounded-4 shadow-lg overflow-hidden">
+            <!-- Danger Header -->
+            <div class="bg-danger pt-5 pb-5 px-4 text-center text-white position-relative" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="bg-white text-danger rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-exclamation-triangle fa-3x"></i>
+                </div>
+                <h3 class="fw-bold mb-0">Critical Warning</h3>
+            </div>
+            
+            <div class="card-body p-5 text-center bg-white" style="margin-top: -20px; border-radius: 20px 20px 0 0;">
+                <h4 class="fw-bold text-dark mb-3">Clear Election Data?</h4>
+                <p class="text-muted fs-5 mb-4">This action will successfully <strong>delete all currently registered candidates and perfectly wipe all votes cast by students</strong>.</p>
+                <div class="bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-3 p-3 mb-4 fw-medium text-start">
+                    <i class="fas fa-info-circle me-2"></i> Teachers, Students, and Positions will remain intact. This action cannot be undone.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-danger btn-lg rounded-pill shadow-sm fw-bold">
+                            <i class="fas fa-trash-alt me-2"></i> Yes, Terminate Election Data
+                        </button>
+                        <a href="{% url 'principal_dashboard' %}" class="btn btn-light btn-lg rounded-pill border shadow-sm fw-bold text-muted">
+                            Cancel & Return
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

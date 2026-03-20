@@ -2,6 +2,22 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import User, Teacher, Student, Position, Candidate, Broadcast, ElectionSettings
 
+CLASS_CHOICES = [
+    ('', 'Select Class'),
+    ('9th', '9th'),
+    ('10th', '10th'),
+    ('11th', '11th'),
+    ('12th', '12th'),
+]
+
+SECTION_CHOICES = [
+    ('', 'Select Section'),
+    ('A', 'A'),
+    ('B', 'B'),
+    ('C', 'C'),
+    ('D', 'D'),
+]
+
 class PrincipalLoginForm(AuthenticationForm):
     def confirm_login_allowed(self, user):
         if not user.is_principal() and not user.is_superuser:
@@ -43,12 +59,18 @@ class TeacherCreationForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
     phone = forms.CharField(max_length=15)
-    class_in_charge = forms.CharField(max_length=10, required=False)
-    section_in_charge = forms.CharField(max_length=10, required=False)
+    class_in_charge = forms.ChoiceField(choices=CLASS_CHOICES, required=False, widget=forms.Select(attrs={'class': 'form-select'}))
+    section_in_charge = forms.ChoiceField(choices=SECTION_CHOICES, required=False, widget=forms.Select(attrs={'class': 'form-select'}))
 
     class Meta:
         model = Teacher
         fields = ['class_in_charge', 'section_in_charge']
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("A user with this username already exists.")
+        return username
 
     def save(self, commit=True):
         user = User.objects.create_user(
@@ -71,12 +93,27 @@ class StudentCreationForm(forms.ModelForm):
     phone = forms.CharField(max_length=15)
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    class_name = forms.CharField(max_length=10)
-    section = forms.CharField(max_length=10)
+    class_name = forms.ChoiceField(choices=CLASS_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
+    section = forms.ChoiceField(choices=SECTION_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
 
     class Meta:
         model = Student
         fields = ['aadhaar', 'class_name', 'section']
+
+    def __init__(self, *args, **kwargs):
+        self.teacher = kwargs.pop('teacher', None)
+        super().__init__(*args, **kwargs)
+        if self.teacher:
+            self.fields['class_name'].initial = self.teacher.class_in_charge
+            self.fields['class_name'].disabled = True
+            self.fields['section'].initial = self.teacher.section_in_charge
+            self.fields['section'].disabled = True
+
+    def clean_aadhaar(self):
+        aadhaar = self.cleaned_data.get('aadhaar')
+        if User.objects.filter(username=aadhaar).exists():
+            raise forms.ValidationError("A student with this Aadhaar already exists.")
+        return aadhaar
 
     def save(self, commit=True):
         user = User.objects.create_user(
@@ -90,6 +127,9 @@ class StudentCreationForm(forms.ModelForm):
         student = super().save(commit=False)
         student.user = user
         student.aadhaar = self.cleaned_data['aadhaar']
+        if self.teacher:
+            student.class_name = self.teacher.class_in_charge
+            student.section = self.teacher.section_in_charge
         if commit:
             student.save()
         return student
@@ -100,19 +140,18 @@ class PositionForm(forms.ModelForm):
         fields = ['name']
 
 class CandidateNominationForm(forms.ModelForm):
-    student_aadhaar = forms.CharField(max_length=12, label="Student Aadhaar")
+    student = forms.ModelChoiceField(
+        queryset=Student.objects.all(),
+        label="Select Student",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     
     class Meta:
         model = Candidate
-        fields = ['position', 'manifesto', 'photo']
-
-    def clean_student_aadhaar(self):
-        aadhaar = self.cleaned_data['student_aadhaar']
-        try:
-            student = Student.objects.get(aadhaar=aadhaar)
-            return student
-        except Student.DoesNotExist:
-            raise forms.ValidationError("Student with this Aadhaar does not exist.")
+        fields = ['student', 'position', 'manifesto', 'photo']
+        widgets = {
+            'position': forms.Select(attrs={'class': 'form-select'})
+        }
 
 class BroadcastForm(forms.ModelForm):
     class Meta:
@@ -122,7 +161,25 @@ class BroadcastForm(forms.ModelForm):
 class ElectionSettingsForm(forms.ModelForm):
     start_time = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
     end_time = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
+    publish_results = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
 
     class Meta:
         model = ElectionSettings
-        fields = ['start_time', 'end_time']
+        fields = ['start_time', 'end_time', 'publish_results']
+
+class PrincipalCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    phone = forms.CharField(max_length=15, required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        user.role = 'principal'
+        user.phone = self.cleaned_data.get('phone', '')
+        if commit:
+            user.save()
+        return user

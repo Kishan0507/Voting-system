@@ -1,118 +1,160 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">Election Results</h2>
-        <a href="{% url 'principal_dashboard' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Dashboard
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-poll text-primary me-2"></i>Election Results</h2>
+            <p class="text-muted">Live and Final Tallies</p>
+        </div>
+        <a href="{% url 'principal_dashboard' %}" class="btn btn-outline-secondary rounded-pill bg-white shadow-sm px-4">
+            <i class="fas fa-arrow-left me-1"></i> Dashboard
         </a>
     </div>
 
     <div class="row g-4">
         {% for result in results_data %}
         <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0 fw-bold">{{ result.position.name }}</h5>
+            <div class="card h-100 border-0 rounded-4 shadow-sm" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);">
+                <div class="card-header bg-transparent border-bottom-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-award text-warning me-2"></i>{{ result.position.name }}</h5>
                 </div>
 
-                <div class="card-body">
-
+                <div class="card-body p-4">
                     <!-- Chart -->
-                    <div class="mb-4" style="height:250px;">
+                    <div class="mb-4 bg-white p-3 rounded-4 border shadow-sm" style="height:280px;">
                         <canvas id="chart-{{ result.position.id }}"></canvas>
                     </div>
 
                     <!-- Candidate List -->
-                    <div class="list-group list-group-flush">
+                    <div class="list-group list-group-flush gap-2">
                         {% for candidate in result.candidates %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center
+                        <div class="list-group-item border-0 rounded-4 px-3 py-2 d-flex justify-content-between align-items-center transition-all hover-lift
                             {% if forloop.first and candidate.total_votes > 0 %}
-                                bg-light border-start border-success border-4
+                                bg-warning bg-opacity-10 border border-warning shadow-sm
+                            {% else %}
+                                bg-light
                             {% endif %}">
 
                             <div class="d-flex align-items-center">
-
                                 {% if forloop.first and candidate.total_votes > 0 %}
-                                    <i class="fas fa-crown text-warning me-2" title="Winner"></i>
+                                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 35px; height: 35px;">
+                                        <i class="fas fa-crown"></i>
+                                    </div>
                                 {% else %}
-                                    <span class="badge bg-secondary rounded-pill me-2">
+                                    <div class="bg-secondary bg-opacity-25 text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; font-weight: bold;">
                                         {{ forloop.counter }}
-                                    </span>
+                                    </div>
                                 {% endif %}
 
                                 <div>
-                                    <h6 class="mb-0 fw-bold">
-                                        {{ candidate.student.name }}
+                                    <h6 class="mb-0 fw-bold text-dark">
+                                        {{ candidate.student.user.get_full_name }}
                                     </h6>
-                                    <small class="text-muted">
-                                        {{ candidate.student.class_name }} - {{ candidate.student.section }}
+                                    <small class="text-muted fw-medium">
+                                        Class {{ candidate.student.class_name }}-{{ candidate.student.section }}
                                     </small>
                                 </div>
                             </div>
 
-                            <span class="badge bg-primary rounded-pill">
-                                {{ candidate.total_votes }} votes
-                            </span>
+                            <div class="text-end">
+                                {% if forloop.first and candidate.total_votes > 0 %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 fs-6 shadow-sm border border-warning">
+                                    {{ candidate.total_votes }} Votes
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-3 py-2 fs-6">
+                                    {{ candidate.total_votes }} Votes
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
                         {% empty %}
-                        <div class="text-center text-muted py-3">
-                            No candidates available.
+                        <div class="text-center p-4">
+                            <i class="fas fa-user-slash fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted small">No candidates available.</p>
                         </div>
                         {% endfor %}
                     </div>
-
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12">
-            <div class="alert alert-info text-center">
-                No results available.
+            <div class="card border-0 rounded-4 shadow-sm bg-white text-center p-5">
+                <i class="fas fa-chart-line fa-4x text-muted opacity-25 mb-4"></i>
+                <h4 class="fw-bold text-dark mb-1">No Results to Show</h4>
+                <p class="text-muted mb-0">Either no positions have been created or no votes have been cast.</p>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
+<style>
+.hover-lift { transition: all 0.2s ease; }
+.hover-lift:hover { transform: translateX(5px); }
+</style>
+
 <!-- Chart Script (Outside Loop) -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.defaults.color = '#64748b';
 
     {% for result in results_data %}
         const ctx{{ result.position.id }} = document
             .getElementById('chart-{{ result.position.id }}')
             .getContext('2d');
 
+        // Create a gradient for the bars
+        let gradient{{ result.position.id }} = ctx{{ result.position.id }}.createLinearGradient(0, 0, 0, 400);
+        gradient{{ result.position.id }}.addColorStop(0, 'rgba(79, 70, 229, 0.8)');   
+        gradient{{ result.position.id }}.addColorStop(1, 'rgba(59, 130, 246, 0.4)');
+
         new Chart(ctx{{ result.position.id }}, {
             type: 'bar',
             data: {
                 labels: {{ result.chart_labels|safe }},
                 datasets: [{
-                    label: 'Votes',
+                    label: 'Total Votes Cast',
                     data: {{ result.chart_data|safe }},
-                    backgroundColor: 'rgba(13, 110, 253, 0.5)',
-                    borderColor: 'rgba(13, 110, 253, 1)',
-                    borderWidth: 1
+                    backgroundColor: gradient{{ result.position.id }},
+                    borderColor: 'rgba(79, 70, 229, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barPercentage: 0.6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { size: 14, family: "'Outfit', sans-serif" },
+                        bodyFont: { size: 14, family: "'Outfit', sans-serif" },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
                 scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { weight: '500' } }
+                    },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
+                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false },
+                        ticks: { stepSize: 1, font: { weight: '500' } }
                     }
                 }
             }
         });
     {% endfor %}
-
 });
 </script>
-
 {% endblock %}

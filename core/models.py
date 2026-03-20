@@ -58,8 +58,9 @@ class Candidate(models.Model):
         unique_together = ('student', 'position')
 
 class ElectionSettings(models.Model):
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    publish_results = models.BooleanField(default=False)
     
     def is_active(self):
         now = timezone.now()
